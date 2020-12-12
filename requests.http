@@ -1,0 +1,13 @@
+GET  http://localhost:3001/events
+
+### 
+
+POST http://localhost:3001/events
+Content-Type: application/json
+
+{
+    "id": 3,
+    "title": "Reading",
+    "dateStart": "Wed, 21 Oct 2015 18:27:50 GMT",
+    "dateEnd": "Wed, 21 Oct 2015 18:50:50 GMT"
+}
