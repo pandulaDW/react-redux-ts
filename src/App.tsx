@@ -1,9 +1,10 @@
 import React from "react";
+import Recorder from "./components/Recorder";
 
 const App: React.FC = () => {
   return (
     <div className="App">
-      <h2>Hello, World!!</h2>
+      <Recorder />
     </div>
   );
 };
