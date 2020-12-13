@@ -3,7 +3,7 @@ import { ThunkAction } from "redux-thunk";
 import { RootState } from "./store";
 
 // Event Object definition -------------------------
-interface UserEvent {
+export interface UserEvent {
   id: number;
   title: string;
   dateStart: string;
@@ -51,13 +51,21 @@ export const loadUserEvents = (): LoadUserThunkType => {
   return async (dispatch, getState) => {
     dispatch({ type: LOAD_REQUEST });
     try {
-      const response = await fetch("http://loclhost:3001/events");
+      const response = await fetch("http://localhost:3001/events");
       const events: UserEvent[] = await response.json();
       dispatch({ type: LOAD_SUCCESS, payload: { events } });
     } catch (err) {
       dispatch({ type: LOAD_FAILURE, error: "Failed to load events." });
     }
   };
+};
+
+// Selector functions -------------------------------
+const selectUserEventsState = (rootState: RootState) => rootState.userEvents;
+
+export const selectUserEventsArray = (rootState: RootState) => {
+  const state = selectUserEventsState(rootState);
+  return state.allIds.map((id) => state.byIds[id]);
 };
 
 // Reducer --------------------------------------------
