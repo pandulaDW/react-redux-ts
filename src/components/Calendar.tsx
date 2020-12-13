@@ -8,6 +8,7 @@ import {
 } from "../redux/user-events";
 import { createDateKey } from "../lib/utils";
 import "../styles/Calendar.css";
+import EventItem from "./EventItem";
 
 interface Props extends PropsFromRedux {}
 type EventGroups = Record<string, UserEvent[]>;
@@ -71,17 +72,7 @@ const Calendar: React.FC<Props> = (props) => {
             </div>
             <div className="calendar-events">
               {events.map((event) => {
-                return (
-                  <div key={event.id} className="calendar-event">
-                    <div className="calendar-event-info">
-                      <div className="calendar-event-time">10.00 - 12.00</div>
-                      <div className="calendar-event-title">{event.title}</div>
-                    </div>
-                    <button className="calendar-event-delete-button">
-                      &times;
-                    </button>
-                  </div>
-                );
+                return <EventItem event={event} key={event.id} />;
               })}
             </div>
           </div>

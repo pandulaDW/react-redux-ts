@@ -117,11 +117,11 @@ export const createUserEvent = (): CreateUserThunkType => {
 };
 
 export const deleteUserEvent = (id: UserEvent["id"]): DeleteUserThunkType => {
-  return async (dispatch, getState) => {
+  return async (dispatch, _) => {
     dispatch({ type: DELETE_REQUEST });
 
     try {
-      const response = await fetch(`http://localhost:3001/events${id}`, {
+      const response = await fetch(`http://localhost:3001/events/${id}`, {
         method: "DELETE",
       });
       if (response.ok) {

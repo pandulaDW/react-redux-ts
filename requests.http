@@ -10,3 +10,7 @@ Content-Type: application/json
     "dateStart": "2020-12-20T26:32:33.123Z",
     "dateEnd": "2020-12-20T26:32:57.123Z"
 }
+
+###
+
+DELETE  http://localhost:3001/events/7
