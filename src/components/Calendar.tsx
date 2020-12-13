@@ -56,20 +56,37 @@ const Calendar: React.FC<Props> = (props) => {
 
   return groupedEvents && sortedGroupKeys ? (
     <div className="calendar">
-      <div className="calendar-day">
-        <div className="calendar-day-label">
-          <span>1 February</span>
-        </div>
-        <div className="calendar-events">
-          <div className="calendar-event">
-            <div className="calendar-event-info">
-              <div className="calendar-event-time">10.00 - 12.00</div>
-              <div className="calendar-event-title">Learning Typescript</div>
+      {sortedGroupKeys.map((dayKey) => {
+        const events: UserEvent[] = groupedEvents ? groupedEvents[dayKey] : [];
+        const groupDate = new Date(dayKey);
+        const day = groupDate.getDate();
+        const month = groupDate.toLocaleString(undefined, { month: "long" });
+
+        return (
+          <div className="calendar-day" key={dayKey}>
+            <div className="calendar-day-label">
+              <span>
+                {day} {month}
+              </span>
             </div>
-            <button className="calendar-event-delete-button">&times;</button>
+            <div className="calendar-events">
+              {events.map((event) => {
+                return (
+                  <div key={event.id} className="calendar-event">
+                    <div className="calendar-event-info">
+                      <div className="calendar-event-time">10.00 - 12.00</div>
+                      <div className="calendar-event-title">{event.title}</div>
+                    </div>
+                    <button className="calendar-event-delete-button">
+                      &times;
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </div>
+        );
+      })}
     </div>
   ) : (
     <p>Loading...</p>
