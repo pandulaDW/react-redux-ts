@@ -1,5 +1,6 @@
 import { Action } from "redux";
 import { ThunkAction } from "redux-thunk";
+import { selectDateStart } from "./recorder";
 import { RootState } from "./store";
 
 // Event Object definition -------------------------
@@ -22,10 +23,13 @@ const initialState: UserEventsState = {
   allIds: [],
 };
 
-// Action definitions --------------------------------
+// Action constants --------------------------------
 const LOAD_REQUEST = "userEvent/load_request";
 const LOAD_SUCCESS = "userEvent/load_success";
 const LOAD_FAILURE = "userEvent/load_failure";
+const CREATE_REQUEST = "userEvent/create_request";
+const CREATE_SUCCESS = "userEvent/create_success";
+const CREATE_FAILURE = "userEvent/create_failure";
 
 // Action types --------------------------------------
 interface LoadRequestAction extends Action<typeof LOAD_REQUEST> {}
@@ -37,6 +41,13 @@ interface LoadSuccessAction extends Action<typeof LOAD_SUCCESS> {
     events: UserEvent[];
   };
 }
+interface CreateRequestAction extends Action<typeof CREATE_REQUEST> {}
+interface CreateRequestSuccess extends Action<typeof CREATE_SUCCESS> {
+  payload: {
+    event: UserEvent;
+  };
+}
+interface CreateFailureAction extends Action<typeof CREATE_FAILURE> {}
 
 // Thunk action type ---------------------------------
 type LoadUserThunkType = ThunkAction<
@@ -46,9 +57,16 @@ type LoadUserThunkType = ThunkAction<
   LoadRequestAction | LoadSuccessAction | LoadFailureAction
 >;
 
-// Thunk action creator ------------------------------
+type CreateUserThunkType = ThunkAction<
+  void,
+  RootState,
+  undefined,
+  CreateRequestAction | CreateRequestSuccess | CreateFailureAction
+>;
+
+// Thunk action creators ------------------------------
 export const loadUserEvents = (): LoadUserThunkType => {
-  return async (dispatch, getState) => {
+  return async (dispatch, _) => {
     dispatch({ type: LOAD_REQUEST });
     try {
       const response = await fetch("http://localhost:3001/events");
@@ -56,6 +74,33 @@ export const loadUserEvents = (): LoadUserThunkType => {
       dispatch({ type: LOAD_SUCCESS, payload: { events } });
     } catch (err) {
       dispatch({ type: LOAD_FAILURE, error: "Failed to load events." });
+    }
+  };
+};
+
+export const createUserEvent = (): CreateUserThunkType => {
+  return async (dispatch, getState) => {
+    dispatch({ type: CREATE_REQUEST });
+    try {
+      const dateStart = selectDateStart(getState());
+      const event: Omit<UserEvent, "id"> = {
+        title: "No name",
+        dateStart,
+        dateEnd: new Date().toISOString(),
+      };
+
+      const response = await fetch("http://localhost:3001/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(event),
+      });
+
+      const createdEvent: UserEvent = await response.json();
+      dispatch({ type: CREATE_SUCCESS, payload: { event: createdEvent } });
+    } catch (err) {
+      dispatch({ type: CREATE_FAILURE });
     }
   };
 };
@@ -71,7 +116,7 @@ export const selectUserEventsArray = (rootState: RootState) => {
 // Reducer --------------------------------------------
 const userEventsReducer = (
   state: UserEventsState = initialState,
-  action: LoadSuccessAction
+  action: LoadSuccessAction | CreateRequestSuccess
 ) => {
   switch (action.type) {
     case LOAD_SUCCESS:
@@ -83,6 +128,13 @@ const userEventsReducer = (
           acc[curr.id] = curr;
           return acc;
         }, {}),
+      };
+    case CREATE_SUCCESS:
+      const { event } = action.payload;
+      return {
+        ...state,
+        allIds: [...state.allIds, event.id],
+        byIds: { ...state.byIds, [event.id]: event },
       };
     default:
       return state;
