@@ -30,6 +30,9 @@ const LOAD_FAILURE = "userEvent/load_failure";
 const CREATE_REQUEST = "userEvent/create_request";
 const CREATE_SUCCESS = "userEvent/create_success";
 const CREATE_FAILURE = "userEvent/create_failure";
+const DELETE_REQUEST = "userEvent/delete_request";
+const DELETE_SUCCESS = "userEvent/delete_success";
+const DELETE_FAILURE = "userEvent/delete_failure";
 
 // Action types --------------------------------------
 interface LoadRequestAction extends Action<typeof LOAD_REQUEST> {}
@@ -48,20 +51,28 @@ interface CreateRequestSuccess extends Action<typeof CREATE_SUCCESS> {
   };
 }
 interface CreateFailureAction extends Action<typeof CREATE_FAILURE> {}
+interface DeleteRequestAction extends Action<typeof DELETE_REQUEST> {}
+interface DeleteSuccessAction extends Action<typeof DELETE_SUCCESS> {
+  payload: { id: UserEvent["id"] };
+}
+interface DeleteFailureAction extends Action<typeof DELETE_FAILURE> {}
 
 // Thunk action type ---------------------------------
-type LoadUserThunkType = ThunkAction<
+type ThunkActionType<T extends Action> = ThunkAction<
   void,
   RootState,
   undefined,
-  LoadRequestAction | LoadSuccessAction | LoadFailureAction
+  T
 >;
 
-type CreateUserThunkType = ThunkAction<
-  void,
-  RootState,
-  undefined,
+type LoadUserThunkType = ThunkActionType<
+  LoadRequestAction | LoadSuccessAction | LoadFailureAction
+>;
+type CreateUserThunkType = ThunkActionType<
   CreateRequestAction | CreateRequestSuccess | CreateFailureAction
+>;
+type DeleteUserThunkType = ThunkActionType<
+  DeleteRequestAction | DeleteSuccessAction | DeleteFailureAction
 >;
 
 // Thunk action creators ------------------------------
@@ -105,6 +116,23 @@ export const createUserEvent = (): CreateUserThunkType => {
   };
 };
 
+export const deleteUserEvent = (id: UserEvent["id"]): DeleteUserThunkType => {
+  return async (dispatch, getState) => {
+    dispatch({ type: DELETE_REQUEST });
+
+    try {
+      const response = await fetch(`http://localhost:3001/events${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        dispatch({ type: DELETE_SUCCESS, payload: { id: id } });
+      }
+    } catch (err) {
+      dispatch({ type: DELETE_FAILURE });
+    }
+  };
+};
+
 // Selector functions -------------------------------
 const selectUserEventsState = (rootState: RootState) => rootState.userEvents;
 
@@ -116,7 +144,7 @@ export const selectUserEventsArray = (rootState: RootState) => {
 // Reducer --------------------------------------------
 const userEventsReducer = (
   state: UserEventsState = initialState,
-  action: LoadSuccessAction | CreateRequestSuccess
+  action: LoadSuccessAction | CreateRequestSuccess | DeleteSuccessAction
 ) => {
   switch (action.type) {
     case LOAD_SUCCESS:
@@ -136,6 +164,15 @@ const userEventsReducer = (
         allIds: [...state.allIds, event.id],
         byIds: { ...state.byIds, [event.id]: event },
       };
+    case DELETE_SUCCESS:
+      const { id } = action.payload;
+      const newState = {
+        ...state,
+        byIds: { ...state.byIds },
+        allIds: state.allIds.filter((el) => el !== id),
+      };
+      delete newState.byIds[id];
+      return newState;
     default:
       return state;
   }
